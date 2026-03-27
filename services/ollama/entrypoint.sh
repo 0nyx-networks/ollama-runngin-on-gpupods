@@ -3,13 +3,21 @@
 set -Eeuo pipefail
 
 TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY:-""}
-TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"ollama-gpupods1"}
+TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"ollama-gpupods"}
 
-# Ollama
-export OLLAMA_MAX_LOADED_MODELS=1
+# Ollama innstallation version
+export OLLAMA_VERSION=v0.18.3
+
+# Ollama environment variables
 export OLLAMA_HOST=0.0.0.0:11434
+export OLLAMA_MAX_LOADED_MODELS=2
+export OLLAMA_KEEP_ALIVE=-1        # モデルをVRAMに常駐
+export OLLAMA_MODELS=/workspace/ollama/models
+export OLLAMA_HOME=/workspace/ollama
+export OLLAMA_ORIGINS="*"
 
 # --- 1. Ollama setup ---
+
 # アーキテクチャを自動判定
 export ARCH=$(uname -m)
 case "$ARCH" in
@@ -19,48 +27,41 @@ case "$ARCH" in
 esac
 
 # ワークスペースに ollama 用のディレクトリを作成
-mkdir -p /workspace/ollama/bin
 mkdir -p /workspace/ollama/models
 
-pushd "/workspace/ollama/bin"
-if [ ! -f "ollama" ]; then
-    # バイナリを /workspace/ollama へ展開
-    curl -L https://ollama.com/download/ollama-linux-${OLLAMA_ARCH}.tgz \
-    | tar -xzf - -C /workspace/ollama
+pushd "/workspace/ollama"
+if [ ! -f "./bin/ollama" ]; then
+    curl -L -o /tmp/ollama.tar.zst \
+        "https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst" \
+    && tar --use-compress-program=unzstd -xf /tmp/ollama.tar.zst -C ./ \
+    && rm /tmp/ollama.tar.zst \
+    || exit 1
 fi
 popd
 
-# PATH を通す
-echo 'export PATH="/workspace/ollama/bin:$PATH"' >> ~/.bashrc
-echo 'export OLLAMA_MODELS="/workspace/ollama/models"' >> ~/.bashrc
-source ~/.bashrc
+export PATH="/workspace/ollama/bin:$PATH"
+export OLLAMA_MODELS="/workspace/ollama/models"
+
+ollama --version || { echo "Failed to verify Ollama installation."; exit 1; }
 
 # --- 2. Tailscale setup ---
-if [ -z "${TAILSCALE_AUTHKEY}" ] || [ -z "${TAILSCALE_HOSTNAME}" ] || [ "${TAILSCALE_HOSTNAME}" == "disabled" ]; then
-    echo "TAILSCALE_AUTHKEY or TAILSCALE_HOSTNAME is not set. Skipping Tailscale setup."
-else
-    echo "TAILSCALE_AUTHKEY and TAILSCALE_HOSTNAME are set. Setting up Tailscale..."
-    # Tailscale を利用するため起動
-    tailscaled --tun=userspace-networking --state=/tmp/tailscale.state || exit 1 &
-    #起動完了まで少し待つ
-    sleep 3
+# 証明書保存用ディレクトリを作成
+mkdir -p /workspace/tailscale-state
 
-    tailscale up \
-    --authkey=${TAILSCALE_AUTHKEY} \
-    --hostname=${TAILSCALE_HOSTNAME} \
-    --advertise-tags=tag:ollama-running-on-gpupods \
-    --accept-routes \
-    --reset
+# tailscaled 起動
+tailscaled \
+--tun=userspace-networking \
+--statedir=/workspace/tailscale-state &
 
-    tailscale wait
+tailscale up \
+--authkey=${TAILSCALE_AUTHKEY} \
+--hostname=${TAILSCALE_HOSTNAME} \
+--advertise-tags=tag:ollama-running-on-gpupods \
+--reset
 
-    echo "Tailscale setup completed. Current IPs:"
-    tailscale ip -4
+tailscale wait
 
-    # Ollamaのホストとポートを環境変数で設定
-    export OLLAMA_HOST=127.0.0.1:11434
-
-    tailscale serve http://${OLLAMA_HOST}
-fi
+echo "Tailscale setup completed. Current IPs:"
+tailscale ip -4
 
 ollama serve

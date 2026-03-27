@@ -2,9 +2,6 @@
 FROM docker.io/ubuntu:24.04
 ENV WORKSPACE="/workspace"
 
-ENV OLLAMA_VERSION=v0.18.3
-ENV OLLAMA_NO_START=1
-
 RUN set -eux \
     && apt-get update \
     && apt-get full-upgrade -y --no-install-recommends \
