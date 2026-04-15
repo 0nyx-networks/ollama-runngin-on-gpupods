@@ -3,7 +3,8 @@
 set -Eeuo pipefail
 
 TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY:-""}
-TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"ollama-gpupods"}
+TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"ollama"}
+TAILSCALE_TAG=${TAILSCALE_TAG:-"cloud-gpu-pods"}
 
 # Ollama innstallation version
 export OLLAMA_VERSION=v0.18.3
@@ -56,7 +57,7 @@ tailscaled \
 tailscale up \
 --authkey=${TAILSCALE_AUTHKEY} \
 --hostname=${TAILSCALE_HOSTNAME} \
---advertise-tags=tag:ollama-running-on-gpupods \
+--advertise-tags=tag:${TAILSCALE_TAG} \
 --reset
 
 tailscale wait
