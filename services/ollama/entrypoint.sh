@@ -7,7 +7,7 @@ TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"ollama"}
 TAILSCALE_TAG=${TAILSCALE_TAG:-"cloud-gpu-pods"}
 
 # Ollama innstallation version
-export OLLAMA_VERSION=v0.18.3
+export OLLAMA_VERSION=v0.21.2
 
 # Ollama environment variables
 export OLLAMA_PORT=11434
