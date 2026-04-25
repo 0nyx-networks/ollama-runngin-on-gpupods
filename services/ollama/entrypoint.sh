@@ -11,7 +11,6 @@ export OLLAMA_VERSION=v0.21.2
 
 # Ollama environment variables
 export OLLAMA_PORT=11434
-export OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT}
 export OLLAMA_MAX_LOADED_MODELS=2
 export OLLAMA_KEEP_ALIVE=-1        # モデルをVRAMに常駐
 export OLLAMA_HOME=/workspace/ollama
@@ -62,9 +61,11 @@ tailscale up \
 
 tailscale wait
 
-echo "Tailscale setup completed. IP: $(tailscale ip -4)"
+export TAILSCALE_IP=$(tailscale ip -4)
+echo "Tailscale setup completed. IP: ${TAILSCALE_IP}"
 
-# tailscale serve でTCP/TLSプロキシを設定 (クライアントはhttps://で接続)
-tailscale serve --bg --tcp ${OLLAMA_PORT} tcp://${OLLAMA_HOST}
+# --- 3. Start Ollama server ---
+# Tailscale IP のみにバインド → インターネットからアクセス不可
+export OLLAMA_HOST="${TAILSCALE_IP}:${OLLAMA_PORT}"
 
 ollama serve
