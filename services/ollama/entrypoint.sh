@@ -62,8 +62,9 @@ tailscale up \
 
 tailscale wait
 
-echo "Tailscale setup completed. Current IPs:"
-tailscale ip -4
+# TailscaleのIPを取得し、そのインターフェースのみにバインド
+TAILSCALE_IP=$(tailscale ip -4)
+echo "Tailscale setup completed. IP: ${TAILSCALE_IP}"
+export OLLAMA_HOST="${TAILSCALE_IP}:${OLLAMA_PORT}"
 
-tailscale serve --bg --https=${OLLAMA_PORT} http://${OLLAMA_HOST}
 ollama serve
