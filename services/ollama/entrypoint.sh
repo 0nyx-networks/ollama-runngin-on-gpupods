@@ -11,7 +11,7 @@ export OLLAMA_VERSION=v0.21.2
 
 # Ollama environment variables
 export OLLAMA_PORT=11434
-export OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}"
+export OLLAMA_HOST="0.0.0.0:${OLLAMA_PORT}"
 export OLLAMA_MAX_LOADED_MODELS=2
 export OLLAMA_KEEP_ALIVE=-1        # モデルをVRAMに常駐
 export OLLAMA_HOME=/workspace/ollama
