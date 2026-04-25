@@ -14,8 +14,8 @@ export OLLAMA_PORT=11434
 export OLLAMA_HOST=127.0.0.1:${OLLAMA_PORT}
 export OLLAMA_MAX_LOADED_MODELS=2
 export OLLAMA_KEEP_ALIVE=-1        # モデルをVRAMに常駐
-export OLLAMA_MODELS=/workspace/ollama/models
 export OLLAMA_HOME=/workspace/ollama
+export OLLAMA_MODELS=${OLLAMA_HOME}/models
 export OLLAMA_ORIGINS="*"
 
 # --- 1. Ollama setup ---
@@ -29,9 +29,9 @@ case "$ARCH" in
 esac
 
 # ワークスペースに ollama 用のディレクトリを作成
-mkdir -p /workspace/ollama/models
+mkdir -p "${OLLAMA_MODELS}"
 
-pushd "/workspace/ollama"
+pushd "${OLLAMA_HOME}"
 if [ ! -f "./bin/ollama" ]; then
     curl -L -o /tmp/ollama.tar.zst \
         "https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/ollama-linux-${OLLAMA_ARCH}.tar.zst" \
@@ -41,8 +41,7 @@ if [ ! -f "./bin/ollama" ]; then
 fi
 popd
 
-export PATH="/workspace/ollama/bin:$PATH"
-export OLLAMA_MODELS="/workspace/ollama/models"
+export PATH="${OLLAMA_HOME}/bin:$PATH"
 
 ollama --version || { echo "Failed to verify Ollama installation."; exit 1; }
 
