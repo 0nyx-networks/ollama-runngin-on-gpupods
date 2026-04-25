@@ -66,6 +66,6 @@ export TAILSCALE_IP=$(tailscale ip -4)
 echo "Tailscale setup completed. IP: ${TAILSCALE_IP}"
 
 # tailscale serve: Tailscaleネットワーク内 → localhost:OLLAMA_PORT
-tailscale serve --bg --tcp ${OLLAMA_PORT} tcp://127.0.0.1:${OLLAMA_PORT}
+tailscale serve --bg --http=${OLLAMA_PORT} http://127.0.0.1:${OLLAMA_PORT}
 
 ollama serve
