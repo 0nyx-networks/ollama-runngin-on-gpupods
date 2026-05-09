@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 TAILSCALE_AUTHKEY=${TAILSCALE_AUTHKEY:-""}
 TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"ollama"}
-TAILSCALE_TAG=${TAILSCALE_TAG:-"cloud-gpu-pods"}
+TAILSCALE_TAG=${TAILSCALE_TAG:-""}
 
 # Ollama innstallation version
 export OLLAMA_VERSION=v0.23.2
@@ -54,11 +54,15 @@ tailscaled \
 --tun=userspace-networking \
 --statedir=/workspace/tailscale-state &
 
-tailscale up \
---authkey=${TAILSCALE_AUTHKEY} \
---hostname=${TAILSCALE_HOSTNAME} \
---advertise-tags=tag:${TAILSCALE_TAG} \
---reset
+TAILSCALE_UP_ARGS=(
+    --authkey="${TAILSCALE_AUTHKEY}"
+    --hostname="${TAILSCALE_HOSTNAME}"
+    --reset
+)
+if [ -n "${TAILSCALE_TAG}" ]; then
+    TAILSCALE_UP_ARGS+=(--advertise-tags="tag:${TAILSCALE_TAG}")
+fi
+tailscale up "${TAILSCALE_UP_ARGS[@]}"
 
 tailscale wait
 
